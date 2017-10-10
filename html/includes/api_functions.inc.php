@@ -854,6 +854,25 @@ function get_ip_addresses()
     echo _json_encode($output);
 }
 
+function get_port_links()
+{
+    global $config;
+    $app      = \Slim\Slim::getInstance();
+    $router   = $app->router()->getCurrentRoute()->getParams();
+    $port_id  = urldecode($router['portid']);
+
+    // use hostname as device_id if it's all digits
+    $port   = dbFetchRows("SELECT * FROM `links` WHERE `local_port_id` = ?", array($port_id));
+    $output = array(
+        'status'  => 'ok',
+        'err-msg' => '',
+        'port'    => $port,
+    );
+    $app->response->setStatus('200');
+    $app->response->headers->set('Content-Type', 'application/json');
+    echo _json_encode($output);
+}
+
 function get_port_info()
 {
     global $config;

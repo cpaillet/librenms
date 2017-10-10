@@ -93,6 +93,12 @@ $app->group(
                         $app->get('/:portid/ip', 'authToken', 'get_ip_addresses')->name('get_port_ip_info');
                     }
                 );
+		$app->group(
+                    '/links',
+                    function () use ($app) {
+                        $app->get('/:portid', 'authToken', 'get_port_links')->name('get_port_links');
+                    }
+                );
                 $app->get('/ports', 'authToken', 'get_all_ports')->name('get_all_ports');
                 $app->group(
                     '/portgroups',
