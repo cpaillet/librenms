@@ -873,6 +873,56 @@ function get_port_links()
     echo _json_encode($output);
 }
 
+function status2int($status)
+{
+	if ( $status == "up" )
+		{
+		return 1 ;
+		}
+	else  { return 0 ; }
+}
+
+function get_metrics()
+{
+    global $config;
+    $app      = \Slim\Slim::getInstance();
+    $ports   = dbFetchRows("select port_id,hostname,ifName,ifOutOctets,ifInOctets,port_descr_type,port_descr_descr,ifSpeed,ifOperStatus,ifAdminStatus,ifInErrors,ifOutErrors,ifInDiscards,ifOutDiscards from ports inner join devices using (device_id) inner join ports_statistics using(port_id) where ifType = 'ethernetCsmacd' and port_descr_type IN ('PEERING','PRIV','LOCAL','TRANSIT')");
+    $app->response->setStatus('200');
+    $app->response->headers->set('Content-Type', 'text/plain; version=0.0.4');
+    echo "# HELP ifIn_bytes ifInOctets Counter\n";
+    echo "# TYPE ifIn_bytes counter\n";
+    echo "# HELP ifOut_bytes ifOut_bytes Counter\n";
+    echo "# TYPE ifOut_bytes counter\n";
+    echo "# HELP ifInErrors ifInErrors Counter\n";
+    echo "# TYPE ifInErrors counter\n";
+    echo "# HELP ifOutErrors ifOutErrors Counter\n";
+    echo "# TYPE ifOutErrors counter\n";
+    echo "# HELP ifInDiscards ifInDiscards Counter\n";
+    echo "# TYPE ifInDiscards counter\n";
+    echo "# HELP ifOutDiscards ifOutDiscards Counter\n";
+    echo "# TYPE ifOutDiscards counter\n";
+    echo "# HELP ifSpeed_bytes ifSpeed_bytes Gauge\n";
+    echo "# TYPE ifSpeed_bytes gauge\n";
+    echo "# HELP ifOperStatus ifOperStatus Gauge\n";
+    echo "# TYPE ifOperStatus gauge\n";
+    echo "# HELP ifAdminStatus ifAdminStatus Gauge\n";
+    echo "# TYPE ifAdminStatus gauge\n";
+    foreach ($ports as $port){
+	echo "ifIn_bytes{port_id=\"".$port{'port_id'}."\",device=\"".$port{'hostname'}."\",port_descr_type=\"".$port{'port_descr_type'}."\",description=\"".$port{'port_descr_descr'}."\",ifName=\"".$port{'ifName'}."\"} ".$port{'ifInOctets'}."\n";
+	echo "ifOut_bytes{port_id=\"".$port{'port_id'}."\",device=\"".$port{'hostname'}."\",port_descr_type=\"".$port{'port_descr_type'}."\",description=\"".$port{'port_descr_descr'}."\",ifName=\"".$port{'ifName'}."\"} ".$port{'ifOutOctets'}."\n";
+	echo "ifInErrors{port_id=\"".$port{'port_id'}."\",device=\"".$port{'hostname'}."\",port_descr_type=\"".$port{'port_descr_type'}."\",description=\"".$port{'port_descr_descr'}."\",ifName=\"".$port{'ifName'}."\"} ".$port{'ifInErrors'}."\n";
+	echo "ifOutErrors{port_id=\"".$port{'port_id'}."\",device=\"".$port{'hostname'}."\",port_descr_type=\"".$port{'port_descr_type'}."\",description=\"".$port{'port_descr_descr'}."\",ifName=\"".$port{'ifName'}."\"} ".$port{'ifOutErrors'}."\n";
+	echo "ifInDiscards{port_id=\"".$port{'port_id'}."\",device=\"".$port{'hostname'}."\",port_descr_type=\"".$port{'port_descr_type'}."\",description=\"".$port{'port_descr_descr'}."\",ifName=\"".$port{'ifName'}."\"} ".$port{'ifInDiscards'}."\n";
+	echo "ifOutDiscards{port_id=\"".$port{'port_id'}."\",device=\"".$port{'hostname'}."\",port_descr_type=\"".$port{'port_descr_type'}."\",description=\"".$port{'port_descr_descr'}."\",ifName=\"".$port{'ifName'}."\"} ".$port{'ifOutDiscards'}."\n";
+	echo "ifSpeed_bytes{port_id=\"".$port{'port_id'}."\",device=\"".$port{'hostname'}."\",port_descr_type=\"".$port{'port_descr_type'}."\",description=\"".
+		$port{'port_descr_descr'}."\",ifName=\"".$port{'ifName'}."\"} ".($port{'ifSpeed'}*100)."\n";
+	echo "ifAdminStatus{port_id=\"".$port{'port_id'}."\",device=\"".$port{'hostname'}."\",port_descr_type=\"".$port{'port_descr_type'}."\",description=\"".
+		$port{'port_descr_descr'}."\",ifName=\"".$port{'ifName'}."\"} ".status2int($port{'ifAdminStatus'})."\n";
+	echo "ifOperStatus{port_id=\"".$port{'port_id'}."\",device=\"".$port{'hostname'}."\",port_descr_type=\"".$port{'port_descr_type'}."\",description=\"".
+		$port{'port_descr_descr'}."\",ifName=\"".$port{'ifName'}."\"} ".status2int($port{'ifOperStatus'})."\n";
+    }
+}
+
 function get_port_info()
 {
     global $config;
